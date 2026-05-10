@@ -148,7 +148,14 @@ export function App() {
     <Shell error={error}>
       <KitchenHeader state={state} playerId={playerId} connection={connection} />
       {state.phase === "LOBBY" && (
-        <LobbyScreen state={state} isHost={isHost} onStart={() => send({ type: "START_GAME", playerId })} />
+        <LobbyScreen
+          state={state}
+          playerId={playerId}
+          isHost={isHost}
+          onStart={() => send({ type: "START_GAME", playerId })}
+          onRemove={(targetPlayerId) => send({ type: "REMOVE_PLAYER", playerId, targetPlayerId })}
+          onCloseRoom={() => send({ type: "CLOSE_ROOM", playerId })}
+        />
       )}
       {state.phase === "CHALLENGE" && <ChallengeScreen isHost={isHost} onNext={nextPhase} />}
       {state.phase === "RECIPE_BUILDING" && (
@@ -189,6 +196,40 @@ function Shell({ children, error }: { children: React.ReactNode; error?: string 
   );
 }
 
+function AccessScreen({ onLogin }: { onLogin: (username: string, password: string) => void }) {
+  const [username, setUsername] = useState("retroAdmin");
+  const [password, setPassword] = useState("");
+
+  return (
+    <section className="home-grid access-grid">
+      <div className="brand-panel">
+        <span className="eyebrow">Acceso privado</span>
+        <h1>ScrumChef</h1>
+        <p>La receta del sprint ideal</p>
+        <div className="chef-mark">??</div>
+      </div>
+      <div className="join-panel">
+        <h2>Entrar</h2>
+        <label>
+          Usuario
+          <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="retroAdmin" />
+        </label>
+        <label>
+          Contraseña
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onLogin(username, password);
+            }}
+          />
+        </label>
+        <button onClick={() => onLogin(username, password)}>Acceder</button>
+      </div>
+    </section>
+  );
+}
 function HomeScreen({
   playerName,
   roomId,
@@ -280,7 +321,21 @@ function ConnectionStatus({ connection }: { connection: Connection }) {
   return <span className={`connection ${connection}`}>{connection === "connected" ? "Conectado" : connection}</span>;
 }
 
-function LobbyScreen({ state, isHost, onStart }: { state: RoomState; isHost: boolean; onStart: () => void }) {
+function LobbyScreen({
+  state,
+  playerId,
+  isHost,
+  onStart,
+  onRemove,
+  onCloseRoom
+}: {
+  state: RoomState;
+  playerId: string;
+  isHost: boolean;
+  onStart: () => void;
+  onRemove: (targetPlayerId: string) => void;
+  onCloseRoom: () => void;
+}) {
   const connected = state.players.filter((player) => player.connected).length;
   return (
     <section className="screen two-column">

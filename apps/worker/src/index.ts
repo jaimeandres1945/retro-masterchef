@@ -285,6 +285,15 @@ export class ScrumChefRoom {
     await this.saveAndBroadcast(state);
   }
 
+  private async closeRoom() {
+    await this.state.storage.delete("room");
+    for (const socket of this.sessions.keys()) {
+      this.send(socket, { type: "ROOM_CLOSED" });
+      socket.close(1000, "Sala cerrada por el host");
+    }
+    this.sessions.clear();
+  }
+
   private async changePhase(state: RoomState, phase: GamePhase) {
     state.phase = phase;
     await this.saveAndBroadcast(state, { type: "PHASE_CHANGED", phase, state });

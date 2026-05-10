@@ -88,6 +88,7 @@ export type ClientEvent =
   | { type: "SUBMIT_VOTE"; playerId: string; targetRecipeId: string; category: Vote["category"] }
   | { type: "ADD_ACTION"; playerId: string; action: Omit<ActionItem, "id"> }
   | { type: "REMOVE_PLAYER"; playerId: string; targetPlayerId: string }
+  | { type: "CLOSE_ROOM"; playerId: string }
   | { type: "PING" };
 
 export type ServerEvent =
@@ -97,6 +98,7 @@ export type ServerEvent =
   | { type: "PLAYER_JOINED"; player: Player; state: RoomState }
   | { type: "PLAYER_LEFT"; playerId: string; state: RoomState }
   | { type: "PHASE_CHANGED"; phase: GamePhase; state: RoomState }
+  | { type: "ROOM_CLOSED" }
   | { type: "ERROR"; message: string }
   | { type: "PONG" };
 
