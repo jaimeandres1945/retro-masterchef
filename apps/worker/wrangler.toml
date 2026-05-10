@@ -1,0 +1,11 @@
+name = "scrumchef-worker"
+main = "src/index.ts"
+compatibility_date = "2026-05-10"
+
+[[durable_objects.bindings]]
+name = "SCRUMCHEF_ROOM"
+class_name = "ScrumChefRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ScrumChefRoom"]
