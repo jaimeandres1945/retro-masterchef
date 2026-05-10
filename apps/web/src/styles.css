@@ -198,6 +198,32 @@ label {
   justify-content: flex-end;
 }
 
+.room-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-code strong {
+  border-radius: 6px;
+  background: rgba(255, 247, 237, 0.12);
+  padding: 4px 7px;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255, 247, 237, 0.16);
+  background: rgba(255, 247, 237, 0.09);
+  color: #fff7ed;
+  font-size: 16px;
+}
+
 .connection {
   display: inline-flex;
   align-items: center;

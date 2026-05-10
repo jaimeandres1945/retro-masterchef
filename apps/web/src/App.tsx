@@ -33,7 +33,7 @@ type DraftIngredient = RecipeIngredient & {
 
 export function App() {
   const [roomId, setRoomId] = useState(localStorage.getItem("scrumchef.roomId") ?? "");
-  const [playerId, setPlayerId] = useState(localStorage.getItem("scrumchef.playerId") ?? "");
+  const [playerId, setPlayerId] = useState(sessionStorage.getItem("scrumchef.playerId") ?? "");
   const [playerName, setPlayerName] = useState(localStorage.getItem("scrumchef.playerName") ?? "");
   const [state, setState] = useState<RoomState | null>(null);
   const [connection, setConnection] = useState<Connection>("idle");
@@ -84,8 +84,9 @@ export function App() {
         setPlayerId(event.playerId);
         setPlayerName(cleanName);
         localStorage.setItem("scrumchef.roomId", event.roomId);
-        localStorage.setItem("scrumchef.playerId", event.playerId);
         localStorage.setItem("scrumchef.playerName", cleanName);
+        localStorage.removeItem("scrumchef.playerId");
+        sessionStorage.setItem("scrumchef.playerId", event.playerId);
       }
       setConnection("connected");
     };
@@ -115,6 +116,14 @@ export function App() {
   };
 
   const changePhase = (phase: GamePhase) => send({ type: "CHANGE_PHASE", playerId, phase });
+  const joinRoom = (name: string, code: string) => {
+    const sameSession =
+      Boolean(playerId) &&
+      code.trim().toUpperCase() === roomId.trim().toUpperCase() &&
+      name.trim() === playerName.trim();
+    connectRoom(code, name, sameSession ? playerId : undefined);
+  };
+
   const nextPhase = () => {
     if (!state) return;
     const next = phaseOrder[phaseOrder.indexOf(state.phase) + 1];
@@ -129,7 +138,7 @@ export function App() {
           roomId={roomId}
           connection={connection}
           onCreate={createRoom}
-          onJoin={(name, code) => connectRoom(code, name, playerId || undefined)}
+          onJoin={joinRoom}
         />
       </Shell>
     );
@@ -229,6 +238,17 @@ function HomeScreen({
 
 function KitchenHeader({ state, playerId, connection }: { state: RoomState; playerId: string; connection: Connection }) {
   const me = state.players.find((player) => player.id === playerId);
+  const [copied, setCopied] = useState(false);
+  const copyRoomId = async () => {
+    try {
+      await navigator.clipboard.writeText(state.roomId);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <header className="kitchen-header">
       <div>
@@ -236,7 +256,19 @@ function KitchenHeader({ state, playerId, connection }: { state: RoomState; play
         <h1>{phaseLabels[state.phase]}</h1>
       </div>
       <div className="header-meta">
-        <strong>Sala {state.roomId}</strong>
+        <div className="room-code">
+          <span>Sala</span>
+          <strong>{state.roomId}</strong>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={copyRoomId}
+            aria-label="Copiar código de sala"
+            title="Copiar código de sala"
+          >
+            {copied ? "OK" : "📋"}
+          </button>
+        </div>
         <span>{me?.isHost ? "Host" : "Jugador"}</span>
         <ConnectionStatus connection={connection} />
       </div>
