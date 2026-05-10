@@ -600,3 +600,10 @@ button.danger.secondary {
     position: static;
   }
 }
+
+.form-hint {
+  margin: 0;
+  color: #fed7aa;
+  font-size: 13px;
+  line-height: 1.35;
+}

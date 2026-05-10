@@ -34,7 +34,7 @@ type DraftIngredient = RecipeIngredient & {
 };
 
 export function App() {
-  const [roomId, setRoomId] = useState(localStorage.getItem("scrumchef.roomId") ?? "");
+  const [roomId, setRoomId] = useState(sessionStorage.getItem("scrumchef.roomId") ?? "");
   const [playerId, setPlayerId] = useState(sessionStorage.getItem("scrumchef.playerId") ?? "");
   const [playerName, setPlayerName] = useState(localStorage.getItem("scrumchef.playerName") ?? "");
   const [state, setState] = useState<RoomState | null>(null);
@@ -53,6 +53,7 @@ export function App() {
     setPlayerId("");
     setConnection("idle");
     sessionStorage.removeItem("scrumchef.playerId");
+    sessionStorage.removeItem("scrumchef.roomId");
     if (message) setError(message);
   };
 
@@ -106,7 +107,7 @@ export function App() {
         setRoomId(event.roomId);
         setPlayerId(event.playerId);
         setPlayerName(cleanName);
-        localStorage.setItem("scrumchef.roomId", event.roomId);
+        sessionStorage.setItem("scrumchef.roomId", event.roomId);
         localStorage.setItem("scrumchef.playerName", cleanName);
         localStorage.removeItem("scrumchef.playerId");
         sessionStorage.setItem("scrumchef.playerId", event.playerId);
@@ -432,7 +433,7 @@ function RecipeBuilderScreen({
 }) {
   const existing = state.recipes.find((recipe) => recipe.playerId === playerId);
   const [recipeName, setRecipeName] = useState(existing?.recipeName ?? "Sprint al punto");
-  const [generalExplanation, setGeneralExplanation] = useState(existing?.generalExplanation ?? "");
+  const generalExplanation = existing?.generalExplanation ?? "";
   const [selected, setSelected] = useState<DraftIngredient[]>(
     existing?.ingredients.map((item) => ({ ...item, draftId: item.ingredient.id })) ?? []
   );
@@ -442,7 +443,6 @@ function RecipeBuilderScreen({
     selected.length > 0 &&
     selected.length <= 5 &&
     total === 100 &&
-    generalExplanation.trim().length > 0 &&
     selected.some((item) => item.explanation?.trim());
 
   const toggleIngredient = (ingredient: Ingredient) => {
@@ -514,10 +514,9 @@ function RecipeBuilderScreen({
             />
           </div>
         ))}
-        <label>
-          Explicación general
-          <textarea value={generalExplanation} onChange={(event) => setGeneralExplanation(event.target.value)} />
-        </label>
+        {!canSubmit && (
+          <p className="form-hint">Selecciona ingredientes, suma 100% y anade explicacion en al menos uno.</p>
+        )}
         <button
           disabled={!canSubmit}
           onClick={() => onSubmit({ recipeName, generalExplanation, ingredients: selected })}
@@ -597,7 +596,7 @@ function RecipePlate({ recipe }: { recipe: Recipe }) {
       </div>
       <h2>{recipe.recipeName}</h2>
       <p>por {recipe.playerName}</p>
-      <p className="muted">{recipe.generalExplanation}</p>
+      {recipe.generalExplanation && <p className="muted">{recipe.generalExplanation}</p>}
     </article>
   );
 }

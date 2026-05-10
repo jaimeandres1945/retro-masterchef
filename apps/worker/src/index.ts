@@ -233,7 +233,6 @@ export class ScrumChefRoom {
 
   private validateRecipe(recipe: Omit<Recipe, "id" | "playerId" | "playerName" | "submittedAt">) {
     if (!recipe.recipeName.trim()) throw new Error("Ponle nombre a tu receta.");
-    if (!recipe.generalExplanation.trim()) throw new Error("Añade al menos una explicación general.");
     if (recipe.ingredients.length === 0) throw new Error("Selecciona al menos un ingrediente.");
     if (recipe.ingredients.length > 5) throw new Error("Puedes seleccionar máximo 5 ingredientes.");
     const total = recipe.ingredients.reduce((sum, item) => sum + Number(item.percentage), 0);
