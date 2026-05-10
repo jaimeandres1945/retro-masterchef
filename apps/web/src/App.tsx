@@ -13,6 +13,8 @@ import {
 
 const API_URL = import.meta.env.VITE_WORKER_URL ?? "http://localhost:8787";
 const WS_URL = API_URL.replace(/^http/, "ws");
+const ADMIN_USER = "retroAdmin";
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "retroAdmin";
 
 const phaseLabels: Record<GamePhase, string> = {
   LOBBY: "Lobby",
@@ -37,15 +39,32 @@ export function App() {
   const [playerName, setPlayerName] = useState(localStorage.getItem("scrumchef.playerName") ?? "");
   const [state, setState] = useState<RoomState | null>(null);
   const [connection, setConnection] = useState<Connection>("idle");
+  const [authenticated, setAuthenticated] = useState(sessionStorage.getItem("scrumchef.auth") === "true");
   const [error, setError] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
 
   const me = state?.players.find((player) => player.id === playerId);
   const isHost = Boolean(me?.isHost);
 
+  const resetToHome = (message?: string) => {
+    socketRef.current?.close();
+    socketRef.current = null;
+    setState(null);
+    setPlayerId("");
+    setConnection("idle");
+    sessionStorage.removeItem("scrumchef.playerId");
+    if (message) setError(message);
+  };
+
   useEffect(() => {
     return () => socketRef.current?.close();
   }, []);
+
+  useEffect(() => {
+    if (state && playerId && !state.players.some((player) => player.id === playerId)) {
+      resetToHome("Has salido de la sala.");
+    }
+  }, [state, playerId]);
 
   const send = (payload: unknown) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -76,6 +95,10 @@ export function App() {
       const event = JSON.parse(message.data) as ServerEvent;
       if (event.type === "ERROR") {
         setError(event.message);
+        return;
+      }
+      if (event.type === "ROOM_CLOSED") {
+        resetToHome("El host ha cerrado la sala.");
         return;
       }
       if ("state" in event) setState(event.state);
@@ -129,6 +152,24 @@ export function App() {
     const next = phaseOrder[phaseOrder.indexOf(state.phase) + 1];
     if (next) changePhase(next);
   };
+
+  const login = (username: string, password: string) => {
+    if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
+      sessionStorage.setItem("scrumchef.auth", "true");
+      setAuthenticated(true);
+      setError("");
+      return;
+    }
+    setError("Usuario o contraseña incorrectos.");
+  };
+
+  if (!authenticated) {
+    return (
+      <Shell error={error}>
+        <AccessScreen onLogin={login} />
+      </Shell>
+    );
+  }
 
   if (!state) {
     return (
