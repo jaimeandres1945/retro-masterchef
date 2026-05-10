@@ -204,6 +204,8 @@ export function App() {
         <RecipeBuilderScreen
           state={state}
           playerId={playerId}
+          isHost={isHost}
+          onNext={nextPhase}
           onSubmit={(recipe) => send({ type: "SUBMIT_RECIPE", playerId, recipe })}
         />
       )}
@@ -425,13 +427,18 @@ function ChallengeScreen({ isHost, onNext }: { isHost: boolean; onNext: () => vo
 function RecipeBuilderScreen({
   state,
   playerId,
+  isHost,
+  onNext,
   onSubmit
 }: {
   state: RoomState;
   playerId: string;
+  isHost: boolean;
+  onNext: () => void;
   onSubmit: (recipe: Omit<Recipe, "id" | "playerId" | "playerName" | "submittedAt">) => void;
 }) {
   const existing = state.recipes.find((recipe) => recipe.playerId === playerId);
+  const submittedCount = state.recipes.length;
   const [recipeName, setRecipeName] = useState(existing?.recipeName ?? "Sprint al punto");
   const generalExplanation = existing?.generalExplanation ?? "";
   const [selected, setSelected] = useState<DraftIngredient[]>(
@@ -521,8 +528,27 @@ function RecipeBuilderScreen({
           disabled={!canSubmit}
           onClick={() => onSubmit({ recipeName, generalExplanation, ingredients: selected })}
         >
-          Enviar receta
+          {existing ? "Actualizar receta" : "Enviar receta"}
         </button>
+        {existing && <p className="success-hint">Receta enviada. Puedes editarla mientras el host no avance.</p>}
+        <div className="submitted-panel">
+          <div className="submitted-heading">
+            <strong>Recetas enviadas</strong>
+            <span>{submittedCount}/{state.players.length}</span>
+          </div>
+          {state.recipes.length === 0 ? (
+            <p className="muted">Todavia no hay recetas enviadas.</p>
+          ) : (
+            state.recipes.map((recipe) => <RecipeSummaryCard recipe={recipe} key={recipe.id} />)
+          )}
+        </div>
+        {isHost ? (
+          <button className="secondary" disabled={state.recipes.length === 0} onClick={onNext}>
+            Ver recetas para debatir
+          </button>
+        ) : (
+          <p className="waiting">Cuando todos envien, el host pasara a la presentacion.</p>
+        )}
       </aside>
       {customOpen && <CustomIngredientModal onClose={() => setCustomOpen(false)} onCreate={addCustom} />}
     </section>
@@ -567,6 +593,25 @@ function CustomIngredientModal({
   );
 }
 
+
+function RecipeSummaryCard({ recipe }: { recipe: Recipe }) {
+  return (
+    <article className="recipe-summary-card">
+      <div>
+        <strong>{recipe.playerName}</strong>
+        <span>{recipe.recipeName}</span>
+      </div>
+      <ul>
+        {recipe.ingredients.map((item) => (
+          <li key={item.ingredient.id}>
+            <span>{item.ingredient.icon} {item.ingredient.name}</span>
+            <strong>{item.percentage}%</strong>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
 function PresentationScreen({ state, isHost, onNext }: { state: RoomState; isHost: boolean; onNext: () => void }) {
   const [index, setIndex] = useState(0);
   const recipe = state.recipes[index];
@@ -596,7 +641,17 @@ function RecipePlate({ recipe }: { recipe: Recipe }) {
       </div>
       <h2>{recipe.recipeName}</h2>
       <p>por {recipe.playerName}</p>
-      {recipe.generalExplanation && <p className="muted">{recipe.generalExplanation}</p>}
+      <div className="recipe-talk-list">
+        {recipe.ingredients.map((item) => (
+          <div className="recipe-talk-item" key={item.ingredient.id}>
+            <div>
+              <strong>{item.ingredient.icon} {item.ingredient.name}</strong>
+              <span>{item.percentage}%</span>
+            </div>
+            {item.explanation && <p>{item.explanation}</p>}
+          </div>
+        ))}
+      </div>
     </article>
   );
 }
