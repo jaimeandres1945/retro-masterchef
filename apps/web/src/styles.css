@@ -702,3 +702,20 @@ button.danger.secondary {
   color: #d6c7b8;
   line-height: 1.45;
 }
+
+.inline-toggle {
+  display: inline-flex;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+  color: #fed7aa;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.inline-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #f97316;
+}

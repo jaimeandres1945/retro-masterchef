@@ -209,7 +209,7 @@ export function App() {
           onSubmit={(recipe) => send({ type: "SUBMIT_RECIPE", playerId, recipe })}
         />
       )}
-      {state.phase === "PRESENTATION" && <PresentationScreen state={state} isHost={isHost} onNext={nextPhase} />}
+      {state.phase === "PRESENTATION" && <PresentationScreen state={state} isHost={isHost} playerId={playerId} onNext={nextPhase} />}
       {state.phase === "VOTING" && (
         <VotingScreen
           state={state}
@@ -438,7 +438,9 @@ function RecipeBuilderScreen({
   onSubmit: (recipe: Omit<Recipe, "id" | "playerId" | "playerName" | "submittedAt">) => void;
 }) {
   const existing = state.recipes.find((recipe) => recipe.playerId === playerId);
+  const [showHostNames, setShowHostNames] = useState(false);
   const submittedCount = state.recipes.length;
+  const visibleRecipes = isHost ? state.recipes : state.recipes.filter((recipe) => recipe.playerId === playerId);
   const [recipeName, setRecipeName] = useState(existing?.recipeName ?? "Sprint al punto");
   const generalExplanation = existing?.generalExplanation ?? "";
   const [selected, setSelected] = useState<DraftIngredient[]>(
@@ -536,10 +538,22 @@ function RecipeBuilderScreen({
             <strong>Recetas enviadas</strong>
             <span>{submittedCount}/{state.players.length}</span>
           </div>
-          {state.recipes.length === 0 ? (
+          {isHost && (
+            <label className="inline-toggle">
+              <input type="checkbox" checked={showHostNames} onChange={(event) => setShowHostNames(event.target.checked)} />
+              Ver nombres
+            </label>
+          )}
+          {visibleRecipes.length === 0 ? (
             <p className="muted">Todavia no hay recetas enviadas.</p>
           ) : (
-            state.recipes.map((recipe) => <RecipeSummaryCard recipe={recipe} key={recipe.id} />)
+            visibleRecipes.map((recipe, index) => (
+              <RecipeSummaryCard
+                recipe={recipe}
+                displayName={isHost && !showHostNames ? `Receta ${index + 1}` : recipe.playerName}
+                key={recipe.id}
+              />
+            ))
           )}
         </div>
         {isHost ? (
@@ -594,11 +608,11 @@ function CustomIngredientModal({
 }
 
 
-function RecipeSummaryCard({ recipe }: { recipe: Recipe }) {
+function RecipeSummaryCard({ recipe, displayName }: { recipe: Recipe; displayName: string }) {
   return (
     <article className="recipe-summary-card">
       <div>
-        <strong>{recipe.playerName}</strong>
+        <strong>{displayName}</strong>
         <span>{recipe.recipeName}</span>
       </div>
       <ul>
@@ -612,23 +626,45 @@ function RecipeSummaryCard({ recipe }: { recipe: Recipe }) {
     </article>
   );
 }
-function PresentationScreen({ state, isHost, onNext }: { state: RoomState; isHost: boolean; onNext: () => void }) {
+function PresentationScreen({
+  state,
+  isHost,
+  playerId,
+  onNext
+}: {
+  state: RoomState;
+  isHost: boolean;
+  playerId: string;
+  onNext: () => void;
+}) {
   const [index, setIndex] = useState(0);
-  const recipe = state.recipes[index];
+  const [showHostNames, setShowHostNames] = useState(false);
+  const visibleRecipes = isHost ? state.recipes : state.recipes.filter((recipe) => recipe.playerId === playerId);
+  const safeIndex = Math.min(index, Math.max(visibleRecipes.length - 1, 0));
+  const recipe = visibleRecipes[safeIndex];
   return (
     <section className="screen presentation">
-      {recipe ? <RecipePlate recipe={recipe} /> : <p className="waiting">Todavía no hay recetas enviadas.</p>}
+      {isHost && (
+        <label className="inline-toggle">
+          <input type="checkbox" checked={showHostNames} onChange={(event) => setShowHostNames(event.target.checked)} />
+          Ver nombres
+        </label>
+      )}
+      {recipe ? (
+        <RecipePlate recipe={recipe} displayName={isHost && !showHostNames ? `Receta ${safeIndex + 1}` : recipe.playerName} />
+      ) : (
+        <p className="waiting">Todavia no hay recetas enviadas.</p>
+      )}
       <div className="presentation-nav">
-        <button className="secondary" onClick={() => setIndex(Math.max(0, index - 1))}>Anterior</button>
-        <span>{Math.min(index + 1, state.recipes.length)} / {state.recipes.length}</span>
-        <button className="secondary" onClick={() => setIndex(Math.min(state.recipes.length - 1, index + 1))}>Siguiente</button>
+        <button className="secondary" onClick={() => setIndex(Math.max(0, safeIndex - 1))}>Anterior</button>
+        <span>{visibleRecipes.length === 0 ? 0 : safeIndex + 1} / {visibleRecipes.length}</span>
+        <button className="secondary" onClick={() => setIndex(Math.min(visibleRecipes.length - 1, safeIndex + 1))}>Siguiente</button>
       </div>
-      {isHost ? <button onClick={onNext}>Pasar a votación</button> : <p className="waiting">Esperando al host</p>}
+      {isHost ? <button onClick={onNext}>Pasar a votacion</button> : <p className="waiting">Esperando al host</p>}
     </section>
   );
 }
-
-function RecipePlate({ recipe }: { recipe: Recipe }) {
+function RecipePlate({ recipe, displayName }: { recipe: Recipe; displayName: string }) {
   return (
     <article className="plate-wrap">
       <div className="plate">
@@ -640,7 +676,7 @@ function RecipePlate({ recipe }: { recipe: Recipe }) {
         ))}
       </div>
       <h2>{recipe.recipeName}</h2>
-      <p>por {recipe.playerName}</p>
+      <p>por {displayName}</p>
       <div className="recipe-talk-list">
         {recipe.ingredients.map((item) => (
           <div className="recipe-talk-item" key={item.ingredient.id}>
