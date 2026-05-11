@@ -188,7 +188,7 @@ export function App() {
 
   return (
     <Shell error={error}>
-      <KitchenHeader state={state} playerId={playerId} connection={connection} />
+      <KitchenHeader state={state} playerId={playerId} connection={connection} onCloseRoom={() => send({ type: "CLOSE_ROOM", playerId })} />
       {state.phase === "LOBBY" && (
         <LobbyScreen
           state={state}
@@ -321,7 +321,17 @@ function HomeScreen({
   );
 }
 
-function KitchenHeader({ state, playerId, connection }: { state: RoomState; playerId: string; connection: Connection }) {
+function KitchenHeader({
+  state,
+  playerId,
+  connection,
+  onCloseRoom
+}: {
+  state: RoomState;
+  playerId: string;
+  connection: Connection;
+  onCloseRoom: () => void;
+}) {
   const me = state.players.find((player) => player.id === playerId);
   const [copied, setCopied] = useState(false);
   const copyRoomId = async () => {
@@ -355,6 +365,11 @@ function KitchenHeader({ state, playerId, connection }: { state: RoomState; play
           </button>
         </div>
         <span>{me?.isHost ? "Host" : "Jugador"}</span>
+        {me?.isHost && (
+          <button type="button" className="danger secondary small-button" onClick={onCloseRoom}>
+            Cerrar sala
+          </button>
+        )}
         <ConnectionStatus connection={connection} />
       </div>
     </header>
@@ -391,7 +406,14 @@ function LobbyScreen({
             <div className="player-row" key={player.id}>
               <span className={player.connected ? "dot online" : "dot"} />
               <strong>{player.name}</strong>
-              {player.isHost && <small>Host</small>}
+              <div className="player-actions">
+                {player.isHost && <small>Host</small>}
+                {isHost && player.id !== playerId && (
+                  <button className="danger small-button" onClick={() => onRemove(player.id)}>
+                    Sacar
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -760,7 +782,7 @@ function SummaryScreen({
 }: {
   state: RoomState;
   isHost: boolean;
-  onAddAction: (action: { text: string; owner: string; dueDate?: string }) => void;
+  onAddAction: (action: { text: string; owner: string }) => void;
 }) {
   const ranking = useMemo(() => buildRanking(state), [state]);
   const ingredientStats = useMemo(() => buildIngredientStats(state), [state]);
@@ -796,31 +818,29 @@ function ActionPanel({
 }: {
   actions: RoomState["actions"];
   isHost: boolean;
-  onAddAction: (action: { text: string; owner: string; dueDate?: string }) => void;
+  onAddAction: (action: { text: string; owner: string }) => void;
 }) {
   const [text, setText] = useState("");
   const [owner, setOwner] = useState("");
-  const [dueDate, setDueDate] = useState("");
   return (
     <div className="actions-panel">
       <h2>Acciones finales</h2>
+      {actions.length === 0 && <p className="muted">Todavia no hay acciones finales.</p>}
       {actions.map((action) => (
         <div className="action-row" key={action.id}>
           <strong>{action.text}</strong>
-          <span>{action.owner}{action.dueDate ? ` · ${action.dueDate}` : ""}</span>
+          <span>{action.owner}</span>
         </div>
       ))}
       {isHost ? (
         <div className="action-form">
           <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Acción" />
           <input value={owner} onChange={(event) => setOwner(event.target.value)} placeholder="Responsable" />
-          <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
           <button
             onClick={() => {
-              onAddAction({ text, owner, dueDate: dueDate || undefined });
+              onAddAction({ text, owner });
               setText("");
               setOwner("");
-              setDueDate("");
             }}
           >
             Añadir acción
