@@ -33,14 +33,28 @@ type DraftIngredient = RecipeIngredient & {
   draftId: string;
 };
 
+const initialParams = new URLSearchParams(window.location.search);
+const initialRoomId = (initialParams.get("room") ?? initialParams.get("code") ?? "").trim().toUpperCase();
+const initialPlayerName = (initialParams.get("name") ?? "").trim();
+
+const parseInvitees = () => {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem("scrumchef.invitees") ?? "[]") as string[];
+    return Array.isArray(stored) ? stored.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+};
+
 export function App() {
-  const [roomId, setRoomId] = useState(sessionStorage.getItem("scrumchef.roomId") ?? "");
+  const [roomId, setRoomId] = useState(initialRoomId || sessionStorage.getItem("scrumchef.roomId") || "");
   const [playerId, setPlayerId] = useState(sessionStorage.getItem("scrumchef.playerId") ?? "");
-  const [playerName, setPlayerName] = useState(localStorage.getItem("scrumchef.playerName") ?? "");
+  const [playerName, setPlayerName] = useState(initialPlayerName || localStorage.getItem("scrumchef.playerName") || "");
   const [state, setState] = useState<RoomState | null>(null);
   const [connection, setConnection] = useState<Connection>("idle");
   const [authenticated, setAuthenticated] = useState(sessionStorage.getItem("scrumchef.auth") === "true");
   const [error, setError] = useState("");
+  const [invitees, setInvitees] = useState<string[]>(parseInvitees);
   const socketRef = useRef<WebSocket | null>(null);
 
   const me = state?.players.find((player) => player.id === playerId);
@@ -54,6 +68,8 @@ export function App() {
     setConnection("idle");
     sessionStorage.removeItem("scrumchef.playerId");
     sessionStorage.removeItem("scrumchef.roomId");
+    sessionStorage.removeItem("scrumchef.invitees");
+    setInvitees([]);
     if (message) setError(message);
   };
 
@@ -121,7 +137,7 @@ export function App() {
     };
   };
 
-  const createRoom = async (name: string) => {
+  const createRoom = async (name: string, plannedInvitees: string[]) => {
     if (!name.trim()) {
       setError("Escribe tu nombre para crear una sala.");
       return;
@@ -197,6 +213,7 @@ export function App() {
           onStart={() => send({ type: "START_GAME", playerId })}
           onRemove={(targetPlayerId) => send({ type: "REMOVE_PLAYER", playerId, targetPlayerId })}
           onCloseRoom={() => send({ type: "CLOSE_ROOM", playerId })}
+          invitees={invitees}
         />
       )}
       {state.phase === "CHALLENGE" && <ChallengeScreen isHost={isHost} onNext={nextPhase} />}
@@ -284,11 +301,17 @@ function HomeScreen({
   playerName: string;
   roomId: string;
   connection: Connection;
-  onCreate: (name: string) => void;
+  onCreate: (name: string, invitees: string[]) => void;
   onJoin: (name: string, code: string) => void;
 }) {
   const [name, setName] = useState(playerName);
   const [code, setCode] = useState(roomId);
+  const [participantText, setParticipantText] = useState("");
+  const inviteeNames = participantText
+    .split(/\\r?\\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 7);
 
   return (
     <section className="home-grid">
@@ -304,8 +327,16 @@ function HomeScreen({
           Nombre de jugador
           <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ada" />
         </label>
+        <label>
+          Participantes invitados
+          <textarea
+            value={participantText}
+            onChange={(event) => setParticipantText(event.target.value)}
+            placeholder="Un nombre por linea"
+          />
+        </label>
         <div className="split-actions">
-          <button onClick={() => onCreate(name)} disabled={connection === "connecting"}>Crear sala</button>
+          <button onClick={() => onCreate(name, inviteeNames)} disabled={connection === "connecting"}>Crear sala</button>
           <span>o</span>
         </div>
         <label>
@@ -376,6 +407,13 @@ function KitchenHeader({
   );
 }
 
+function buildInviteUrl(roomId: string, name: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("name", name);
+  return url.toString();
+}
+
 function ConnectionStatus({ connection }: { connection: Connection }) {
   return <span className={`connection ${connection}`}>{connection === "connected" ? "Conectado" : connection}</span>;
 }
@@ -386,7 +424,8 @@ function LobbyScreen({
   isHost,
   onStart,
   onRemove,
-  onCloseRoom
+  onCloseRoom,
+  invitees
 }: {
   state: RoomState;
   playerId: string;
@@ -394,13 +433,39 @@ function LobbyScreen({
   onStart: () => void;
   onRemove: (targetPlayerId: string) => void;
   onCloseRoom: () => void;
+  invitees: string[];
 }) {
   const connected = state.players.filter((player) => player.connected).length;
+  const [copiedInvites, setCopiedInvites] = useState(false);
+  const inviteUrls = invitees.map((name) => ({ name, url: buildInviteUrl(state.roomId, name) }));
+  const copyInviteUrls = async () => {
+    const text = inviteUrls.map((invite) => `${invite.name}: ${invite.url}`).join("\\n");
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    setCopiedInvites(true);
+    window.setTimeout(() => setCopiedInvites(false), 1600);
+  };
   return (
     <section className="screen two-column">
       <div>
         <h2>Brigada en cocina</h2>
         <p className="muted">Mínimo 4 y máximo 8 jugadores. El host inicia cuando el equipo esté listo.</p>
+        {isHost && inviteUrls.length > 0 && (
+          <div className="invite-panel">
+            <div className="invite-heading">
+              <strong>URLs de invitacion</strong>
+              <button className="secondary small-button" onClick={copyInviteUrls}>
+                {copiedInvites ? "Copiadas" : "Copiar lista"}
+              </button>
+            </div>
+            {inviteUrls.map((invite) => (
+              <div className="invite-row" key={invite.name}>
+                <strong>{invite.name}</strong>
+                <span>{invite.url}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="players">
           {state.players.map((player) => (
             <div className="player-row" key={player.id}>
