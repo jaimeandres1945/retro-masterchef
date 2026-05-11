@@ -56,6 +56,7 @@ export function App() {
   const [error, setError] = useState("");
   const [invitees, setInvitees] = useState<string[]>(parseInvitees);
   const socketRef = useRef<WebSocket | null>(null);
+  const inviteAutoJoinRef = useRef(false);
 
   const me = state?.players.find((player) => player.id === playerId);
   const isHost = Boolean(me?.isHost);
@@ -176,6 +177,13 @@ export function App() {
     const next = phaseOrder[phaseOrder.indexOf(state.phase) + 1];
     if (next) changePhase(next);
   };
+
+  useEffect(() => {
+    if (!authenticated || inviteAutoJoinRef.current || !initialRoomId || !initialPlayerName || state) return;
+    if (connection === "connecting" || connection === "connected") return;
+    inviteAutoJoinRef.current = true;
+    connectRoom(initialRoomId, initialPlayerName);
+  }, [authenticated, connection, state]);
 
   const login = (username: string, password: string) => {
     if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
