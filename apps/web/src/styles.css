@@ -544,6 +544,17 @@ button.danger.secondary {
   grid-column: 1 / -1;
   margin: 0;
 }
+.own-vote-recipe {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  margin: 6px 0 20px;
+}
+
+.own-vote-recipe h3 {
+  margin: 0;
+}
+
 .actions-panel {
   display: grid;
   gap: 12px;

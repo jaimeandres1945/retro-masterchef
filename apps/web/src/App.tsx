@@ -546,7 +546,7 @@ function ChallengeScreen({ isHost, onNext }: { isHost: boolean; onNext: () => vo
       <span className="eyebrow">Reto del sprint</span>
       <h2>Crear la receta del sprint ideal para este equipo</h2>
       <div className="objective-grid">
-        {["mÃ¡s claridad", "menos estrÃ©s", "mejor colaboraciÃ³n", "mÃ¡s calidad", "mÃ¡s foco"].map((goal) => (
+        {["Más Claridad", "Menos Estrés", "Mejor Colaboración", "Más Calidad", "Más Foco"].map((goal) => (
           <div className="objective" key={goal}>{goal}</div>
         ))}
       </div>
@@ -852,7 +852,12 @@ function VotingScreen({
     { id: "INNOVATIVE", label: "MÃ¡s innovadora" },
     { id: "REALISTIC", label: "MÃ¡s realista" }
   ];
+  const ownRecipe = state.recipes.find((recipe) => recipe.playerId === playerId);
   const votableRecipes = state.recipes.filter((recipe) => recipe.playerId !== playerId);
+  const recipeDisplayName = (recipe: Recipe) => {
+    const player = state.players.find((item) => item.id === recipe.playerId);
+    return player?.isHost ? `${recipe.playerName} (Host)` : recipe.playerName;
+  };
   return (
     <section className="screen">
       <h2>VotaciÃ³n</h2>
@@ -864,6 +869,7 @@ function VotingScreen({
             recipes={votableRecipes}
             voted={state.votes.some((vote) => vote.voterPlayerId === playerId && vote.category === category.id)}
             onVote={onVote}
+            getDisplayName={recipeDisplayName}
           />
         ))}
       </div>
@@ -873,10 +879,16 @@ function VotingScreen({
           <p className="muted">Todavia no hay otras recetas para votar.</p>
         ) : (
           votableRecipes.map((recipe) => (
-            <RecipeSummaryCard recipe={recipe} displayName={recipe.playerName} showExplanations key={recipe.id} />
+            <RecipeSummaryCard recipe={recipe} displayName={recipeDisplayName(recipe)} showExplanations key={recipe.id} />
           ))
         )}
       </div>
+      {ownRecipe && (
+        <div className="own-vote-recipe">
+          <h3>Tu receta, no votable</h3>
+          <RecipeSummaryCard recipe={ownRecipe} displayName={recipeDisplayName(ownRecipe)} showExplanations />
+        </div>
+      )}
       {isHost ? <button onClick={onNext}>Ver resumen</button> : <p className="waiting">Esperando al host</p>}
     </section>
   );
@@ -886,19 +898,21 @@ function VotingPanel({
   category,
   recipes,
   voted,
-  onVote
+  onVote,
+  getDisplayName
 }: {
   category: { id: Vote["category"]; label: string };
   recipes: Recipe[];
   voted: boolean;
   onVote: (targetRecipeId: string, category: Vote["category"]) => void;
+  getDisplayName: (recipe: Recipe) => string;
 }) {
   return (
     <div className="vote-panel">
       <h3>{category.label}</h3>
       {recipes.map((recipe) => (
         <button className="secondary" disabled={voted} onClick={() => onVote(recipe.id, category.id)} key={recipe.id}>
-          {recipe.recipeName} Â· {recipe.playerName}
+          {recipe.recipeName} · {getDisplayName(recipe)}
         </button>
       ))}
       {voted && <small>Voto registrado</small>}
