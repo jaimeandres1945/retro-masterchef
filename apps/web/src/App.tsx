@@ -154,6 +154,7 @@ export function App() {
       const response = await fetch(`${API_URL}/api/rooms`, { method: "POST" });
       if (!response.ok) throw new Error("No se pudo crear la sala.");
       const data = (await response.json()) as { roomId: string };
+      updateInvitees(plannedInvitees);
       connectRoom(data.roomId, name);
     } catch (caught) {
       setConnection("disconnected");
@@ -446,8 +447,11 @@ function LobbyScreen({
 }) {
   const connected = state.players.filter((player) => player.connected).length;
   const [copiedInvites, setCopiedInvites] = useState(false);
-  const [inviteText, setInviteText] = useState(invitees.join("\\n"));
+  const [inviteText, setInviteText] = useState(invitees.join("\n"));
   const inviteUrls = invitees.map((name) => ({ name, url: buildInviteUrl(state.roomId, name) }));
+  useEffect(() => {
+    setInviteText(invitees.join("\n"));
+  }, [invitees]);
   const saveInvitees = () => {
     onUpdateInvitees(
       inviteText
@@ -457,7 +461,7 @@ function LobbyScreen({
     );
   };
   const copyInviteUrls = async () => {
-    const text = inviteUrls.map((invite) => `${invite.name}: ${invite.url}`).join("\\n");
+    const text = inviteUrls.map((invite) => `${invite.name}: ${invite.url}`).join("\n");
     if (!text) return;
     await navigator.clipboard.writeText(text);
     setCopiedInvites(true);
