@@ -532,6 +532,18 @@ button.danger.secondary {
   align-content: start;
 }
 
+
+.voting-recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.voting-recipes h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 .actions-panel {
   display: grid;
   gap: 12px;
@@ -664,11 +676,22 @@ button.danger.secondary {
 }
 
 .recipe-summary-card li {
+  display: grid;
+  gap: 5px;
+  color: #fff7ed;
+  font-size: 13px;
+}
+
+.recipe-summary-line {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  color: #fff7ed;
-  font-size: 13px;
+}
+
+.recipe-summary-card li p {
+  margin: 0;
+  color: #d6c7b8;
+  line-height: 1.35;
 }
 
 .recipe-talk-list {

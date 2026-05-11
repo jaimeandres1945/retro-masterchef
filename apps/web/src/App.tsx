@@ -739,7 +739,15 @@ function CustomIngredientModal({
 }
 
 
-function RecipeSummaryCard({ recipe, displayName }: { recipe: Recipe; displayName: string }) {
+function RecipeSummaryCard({
+  recipe,
+  displayName,
+  showExplanations = false
+}: {
+  recipe: Recipe;
+  displayName: string;
+  showExplanations?: boolean;
+}) {
   return (
     <article className="recipe-summary-card">
       <div>
@@ -749,8 +757,11 @@ function RecipeSummaryCard({ recipe, displayName }: { recipe: Recipe; displayNam
       <ul>
         {recipe.ingredients.map((item) => (
           <li key={item.ingredient.id}>
-            <span>{item.ingredient.icon} {item.ingredient.name}</span>
-            <strong>{item.percentage}%</strong>
+            <div className="recipe-summary-line">
+              <span>{item.ingredient.icon} {item.ingredient.name}</span>
+              <strong>{item.percentage}%</strong>
+            </div>
+            {showExplanations && item.explanation && <p>{item.explanation}</p>}
           </li>
         ))}
       </ul>
@@ -841,6 +852,7 @@ function VotingScreen({
     { id: "INNOVATIVE", label: "Más innovadora" },
     { id: "REALISTIC", label: "Más realista" }
   ];
+  const votableRecipes = state.recipes.filter((recipe) => recipe.playerId !== playerId);
   return (
     <section className="screen">
       <h2>Votación</h2>
@@ -849,11 +861,21 @@ function VotingScreen({
           <VotingPanel
             key={category.id}
             category={category}
-            recipes={state.recipes.filter((recipe) => recipe.playerId !== playerId)}
+            recipes={votableRecipes}
             voted={state.votes.some((vote) => vote.voterPlayerId === playerId && vote.category === category.id)}
             onVote={onVote}
           />
         ))}
+      </div>
+      <div className="voting-recipes">
+        <h3>Recetas disponibles para votar</h3>
+        {votableRecipes.length === 0 ? (
+          <p className="muted">Todavia no hay otras recetas para votar.</p>
+        ) : (
+          votableRecipes.map((recipe) => (
+            <RecipeSummaryCard recipe={recipe} displayName={recipe.playerName} showExplanations key={recipe.id} />
+          ))
+        )}
       </div>
       {isHost ? <button onClick={onNext}>Ver resumen</button> : <p className="waiting">Esperando al host</p>}
     </section>
