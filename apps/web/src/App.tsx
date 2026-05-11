@@ -60,6 +60,12 @@ export function App() {
   const me = state?.players.find((player) => player.id === playerId);
   const isHost = Boolean(me?.isHost);
 
+  const updateInvitees = (names: string[]) => {
+    const cleaned = names.map((item) => item.trim()).filter(Boolean).slice(0, 7);
+    setInvitees(cleaned);
+    sessionStorage.setItem("scrumchef.invitees", JSON.stringify(cleaned));
+  };
+
   const resetToHome = (message?: string) => {
     socketRef.current?.close();
     socketRef.current = null;
@@ -214,6 +220,7 @@ export function App() {
           onRemove={(targetPlayerId) => send({ type: "REMOVE_PLAYER", playerId, targetPlayerId })}
           onCloseRoom={() => send({ type: "CLOSE_ROOM", playerId })}
           invitees={invitees}
+          onUpdateInvitees={updateInvitees}
         />
       )}
       {state.phase === "CHALLENGE" && <ChallengeScreen isHost={isHost} onNext={nextPhase} />}
@@ -308,7 +315,7 @@ function HomeScreen({
   const [code, setCode] = useState(roomId);
   const [participantText, setParticipantText] = useState("");
   const inviteeNames = participantText
-    .split(/\\r?\\n|,/)
+    .split(/\r?\n|,/)
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 7);
@@ -425,7 +432,8 @@ function LobbyScreen({
   onStart,
   onRemove,
   onCloseRoom,
-  invitees
+  invitees,
+  onUpdateInvitees
 }: {
   state: RoomState;
   playerId: string;
@@ -434,10 +442,20 @@ function LobbyScreen({
   onRemove: (targetPlayerId: string) => void;
   onCloseRoom: () => void;
   invitees: string[];
+  onUpdateInvitees: (names: string[]) => void;
 }) {
   const connected = state.players.filter((player) => player.connected).length;
   const [copiedInvites, setCopiedInvites] = useState(false);
+  const [inviteText, setInviteText] = useState(invitees.join("\\n"));
   const inviteUrls = invitees.map((name) => ({ name, url: buildInviteUrl(state.roomId, name) }));
+  const saveInvitees = () => {
+    onUpdateInvitees(
+      inviteText
+        .split(/\r?\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    );
+  };
   const copyInviteUrls = async () => {
     const text = inviteUrls.map((invite) => `${invite.name}: ${invite.url}`).join("\\n");
     if (!text) return;
@@ -450,20 +468,34 @@ function LobbyScreen({
       <div>
         <h2>Brigada en cocina</h2>
         <p className="muted">Mínimo 4 y máximo 8 jugadores. El host inicia cuando el equipo esté listo.</p>
-        {isHost && inviteUrls.length > 0 && (
+        {isHost && (
           <div className="invite-panel">
             <div className="invite-heading">
               <strong>URLs de invitacion</strong>
-              <button className="secondary small-button" onClick={copyInviteUrls}>
-                {copiedInvites ? "Copiadas" : "Copiar lista"}
-              </button>
-            </div>
-            {inviteUrls.map((invite) => (
-              <div className="invite-row" key={invite.name}>
-                <strong>{invite.name}</strong>
-                <span>{invite.url}</span>
+              <div className="invite-actions">
+                <button className="secondary small-button" onClick={saveInvitees}>
+                  Generar URLs
+                </button>
+                <button className="secondary small-button" disabled={inviteUrls.length === 0} onClick={copyInviteUrls}>
+                  {copiedInvites ? "Copiadas" : "Copiar lista"}
+                </button>
               </div>
-            ))}
+            </div>
+            <textarea
+              value={inviteText}
+              onChange={(event) => setInviteText(event.target.value)}
+              placeholder="Un nombre por linea"
+            />
+            {inviteUrls.length === 0 ? (
+              <p className="muted">Escribe participantes y pulsa Generar URLs.</p>
+            ) : (
+              inviteUrls.map((invite) => (
+                <div className="invite-row" key={invite.name}>
+                  <strong>{invite.name}</strong>
+                  <span>{invite.url}</span>
+                </div>
+              ))
+            )}
           </div>
         )}
         <div className="players">

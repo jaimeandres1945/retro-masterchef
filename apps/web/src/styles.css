@@ -751,3 +751,14 @@ button.danger.secondary {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.invite-panel textarea {
+  min-height: 76px;
+}
