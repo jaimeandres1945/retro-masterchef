@@ -20,8 +20,8 @@ const phaseLabels: Record<GamePhase, string> = {
   LOBBY: "Lobby",
   CHALLENGE: "Reto",
   RECIPE_BUILDING: "Cocina",
-  PRESENTATION: "Presentaci√≥n",
-  VOTING: "Votaci√≥n",
+  PRESENTATION: "Presentaci\u00f3n",
+  VOTING: "Votaci\u00f3n",
   SUMMARY: "Resumen"
 };
 
@@ -192,7 +192,7 @@ export function App() {
       setError("");
       return;
     }
-    setError("Usuario o contraseÒa incorrectos.");
+    setError("Usuario o contrase√±a incorrectos.");
   };
 
   if (!authenticated) {
@@ -283,7 +283,7 @@ function AccessScreen({ onLogin }: { onLogin: (username: string, password: strin
         <span className="eyebrow">Acceso privado</span>
         <h1>ScrumChef</h1>
         <p>La receta del sprint ideal</p>
-        <div className="chef-mark">??</div>
+        <div className="chef-mark">{"\ud83c\udf73"}</div>
       </div>
       <div className="join-panel">
         <h2>Entrar</h2>
@@ -292,7 +292,7 @@ function AccessScreen({ onLogin }: { onLogin: (username: string, password: strin
           <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="retroAdmin" />
         </label>
         <label>
-          ContraseÒa
+          Contrase√±a
           <input
             type="password"
             value={password}
@@ -335,7 +335,7 @@ function HomeScreen({
         <span className="eyebrow">Retrospectivas Scrum gamificadas</span>
         <h1>ScrumChef</h1>
         <p>La receta del sprint ideal</p>
-        <div className="chef-mark">üç≥</div>
+        <div className="chef-mark">{"\ud83c\udf73"}</div>
       </div>
       <div className="join-panel">
         <h2>Entrar a cocina</h2>
@@ -541,12 +541,19 @@ function LobbyScreen({
 }
 
 function ChallengeScreen({ isHost, onNext }: { isHost: boolean; onNext: () => void }) {
+  const goals = [
+    "M\u00e1s Claridad",
+    "Menos Estr\u00e9s",
+    "Mejor Colaboraci\u00f3n",
+    "M\u00e1s Calidad",
+    "M\u00e1s Foco"
+  ];
   return (
     <section className="screen challenge">
       <span className="eyebrow">Reto del sprint</span>
       <h2>Crear la receta del sprint ideal para este equipo</h2>
       <div className="objective-grid">
-        {["M·s Claridad", "Menos EstrÈs", "Mejor ColaboraciÛn", "M·s Calidad", "M·s Foco"].map((goal) => (
+        {goals.map((goal) => (
           <div className="objective" key={goal}>{goal}</div>
         ))}
       </div>
@@ -625,8 +632,8 @@ function RecipeBuilderScreen({
             />
           ))}
           <button className="custom-card" onClick={() => setCustomOpen(true)} disabled={selected.length >= 5}>
-            <span>‚≠ê</span>
-            Ingrediente comod√≠n
+            <span>{"\u2b50"}</span>
+            {"Ingrediente comod\u00edn"}
           </button>
         </div>
       </div>
@@ -650,12 +657,12 @@ function RecipeBuilderScreen({
             <textarea
               value={item.explanation ?? ""}
               onChange={(event) => updateSelected(item.draftId, { explanation: event.target.value })}
-              placeholder="Por qu√© entra en la receta"
+              placeholder="Por qu\u00e9 entra en la receta"
             />
           </div>
         ))}
         {!canSubmit && (
-          <p className="form-hint">Selecciona ingredientes, suma 100% y anade explicacion en al menos uno.</p>
+          <p className="form-hint">Selecciona ingredientes, suma 100% y a\u00f1ade explicaci\u00f3n en al menos uno.</p>
         )}
         <button
           disabled={!canSubmit}
@@ -676,7 +683,7 @@ function RecipeBuilderScreen({
             </label>
           )}
           {visibleRecipes.length === 0 ? (
-            <p className="muted">Todavia no hay recetas enviadas.</p>
+            <p className="muted">Todav\u00eda no hay recetas enviadas.</p>
           ) : (
             visibleRecipes.map((recipe, index) => (
               <RecipeSummaryCard
@@ -692,7 +699,7 @@ function RecipeBuilderScreen({
             Ver recetas para debatir
           </button>
         ) : (
-          <p className="waiting">Cuando todos envien, el host pasara a la presentacion.</p>
+          <p className="waiting">Cuando todos env\u00eden, el host pasar\u00e1 a la presentaci\u00f3n.</p>
         )}
       </aside>
       {customOpen && <CustomIngredientModal onClose={() => setCustomOpen(false)} onCreate={addCustom} />}
@@ -723,14 +730,14 @@ function CustomIngredientModal({
   return (
     <div className="modal-backdrop">
       <div className="modal">
-        <h2>Ingrediente comod√≠n</h2>
+        <h2>{"Ingrediente comod\u00edn"}</h2>
         <label>Nombre<input value={name} onChange={(event) => setName(event.target.value)} /></label>
-        <label>Descripci√≥n<textarea value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+        <label>Descripci\u00f3n<textarea value={description} onChange={(event) => setDescription(event.target.value)} /></label>
         <label>Porcentaje<input type="number" value={percentage} onChange={(event) => setPercentage(Number(event.target.value))} /></label>
         <div className="modal-actions">
           <button className="secondary" onClick={onClose}>Cancelar</button>
           <button disabled={!name.trim() || !description.trim()} onClick={() => onCreate(name, description, percentage)}>
-            A√±adir
+            A\u00f1adir
           </button>
         </div>
       </div>
@@ -912,7 +919,7 @@ function VotingPanel({
       <h3>{category.label}</h3>
       {recipes.map((recipe) => (
         <button className="secondary" disabled={voted} onClick={() => onVote(recipe.id, category.id)} key={recipe.id}>
-          {recipe.recipeName} ∑ {getDisplayName(recipe)}
+          {recipe.recipeName} ¬∑ {getDisplayName(recipe)}
         </button>
       ))}
       {voted && <small>Voto registrado</small>}

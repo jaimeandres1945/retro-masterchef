@@ -115,19 +115,19 @@ export const INGREDIENTS: Ingredient[] = [
   {
     id: "communication",
     type: "COMMUNICATION",
-    name: "Comunicación clara",
+    name: "Comunicaci\u00f3n clara",
     color: "#7dd3fc",
-    icon: "💬",
+    icon: "\ud83d\udcac",
     description: "Prioridades visibles, seguimiento correcto y feedback temprano.",
     isCustom: false
   },
   {
     id: "collaboration",
     type: "COLLABORATION",
-    name: "Colaboración",
+    name: "Colaboraci\u00f3n",
     color: "#22c55e",
-    icon: "🤝",
-    description: "Ayuda entre compañeros, pairing y compartir conocimiento.",
+    icon: "\ud83e\udd1d",
+    description: "Ayuda entre compa\u00f1eros, pairing y compartir conocimiento.",
     isCustom: false
   },
   {
@@ -135,8 +135,8 @@ export const INGREDIENTS: Ingredient[] = [
     type: "LIGHT_REFINEMENT",
     name: "Refinamiento ligero",
     color: "#facc15",
-    icon: "📋",
-    description: "Análisis técnico suficiente para entender tareas sin hacer reuniones pesadas.",
+    icon: "\ud83d\udccb",
+    description: "An\u00e1lisis t\u00e9cnico suficiente para entender tareas sin hacer reuniones pesadas.",
     isCustom: false
   },
   {
@@ -144,7 +144,7 @@ export const INGREDIENTS: Ingredient[] = [
     type: "OWNERSHIP",
     name: "Ownership claro",
     color: "#a78bfa",
-    icon: "🎯",
+    icon: "\ud83c\udfaf",
     description: "Responsabilidades claras, cobertura definida y decisiones visibles.",
     isCustom: false
   },
@@ -153,8 +153,8 @@ export const INGREDIENTS: Ingredient[] = [
     type: "QUALITY",
     name: "Calidad",
     color: "#fb923c",
-    icon: "✅",
-    description: "Testing, validación, Definition of Done y revisión antes de cerrar.",
+    icon: "\u2705",
+    description: "Testing, validaci\u00f3n, Definition of Done y revisi\u00f3n antes de cerrar.",
     isCustom: false
   },
   {
@@ -162,7 +162,7 @@ export const INGREDIENTS: Ingredient[] = [
     type: "FOCUS",
     name: "Foco",
     color: "#f87171",
-    icon: "🔥",
+    icon: "\ud83d\udd25",
     description: "Menos interrupciones, menos multitasking y menos cambios de prioridad.",
     isCustom: false
   },
@@ -171,17 +171,17 @@ export const INGREDIENTS: Ingredient[] = [
     type: "FLEXIBILITY",
     name: "Flexibilidad",
     color: "#67e8f9",
-    icon: "🔄",
-    description: "Capacidad del equipo para adaptarse si alguien se bloquea o no está disponible.",
+    icon: "\ud83d\udd04",
+    description: "Capacidad del equipo para adaptarse si alguien se bloquea o no est\u00e1 disponible.",
     isCustom: false
   },
   {
     id: "innovation",
     type: "INNOVATION",
-    name: "Innovación",
+    name: "Innovaci\u00f3n",
     color: "#f472b6",
-    icon: "🚀",
-    description: "Uso de IA, automatización, mejoras técnicas y nuevas formas de trabajar.",
+    icon: "\ud83d\ude80",
+    description: "Uso de IA, automatizaci\u00f3n, mejoras t\u00e9cnicas y nuevas formas de trabajar.",
     isCustom: false
   },
   {
@@ -189,8 +189,8 @@ export const INGREDIENTS: Ingredient[] = [
     type: "WELLBEING",
     name: "Bienestar",
     color: "#15803d",
-    icon: "🧠",
-    description: "Menos estrés, más seguridad psicológica y mejor equilibrio.",
+    icon: "\ud83e\udde0",
+    description: "Menos estr\u00e9s, m\u00e1s seguridad psicol\u00f3gica y mejor equilibrio.",
     isCustom: false
   },
   {
@@ -198,7 +198,7 @@ export const INGREDIENTS: Ingredient[] = [
     type: "VISIBILITY",
     name: "Visibilidad",
     color: "#9ca3af",
-    icon: "👀",
+    icon: "\ud83d\udc40",
     description: "Estado real de tareas, bloqueos, riesgos y dependencias visibles.",
     isCustom: false
   }
@@ -207,9 +207,9 @@ export const INGREDIENTS: Ingredient[] = [
 export const CUSTOM_INGREDIENT_TEMPLATE: Ingredient = {
   id: "custom-ingredient",
   type: "CUSTOM_INGREDIENT",
-  name: "Ingrediente comodín",
+  name: "Ingrediente comod\u00edn",
   color: "#111827",
-  icon: "⭐",
+  icon: "\u2b50",
   description: "Ingrediente personalizado creado por el jugador.",
   isCustom: true
 };
